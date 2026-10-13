@@ -23,7 +23,7 @@ jobs:
         run: python calculator.py
         shell: powershell
 
-   code-analysis:
+  code-analysis:
     name: SonarQube Analysis
     needs: test
     runs-on: self-hosted
