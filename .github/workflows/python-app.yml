@@ -1,0 +1,60 @@
+name: Calculator CI-CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: CI - Run Calculator
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check Python Version
+        run: python --version
+        shell: powershell
+
+      - name: Run Calculator
+        run: python calculator.py
+        shell: powershell
+
+  code-analysis:
+    name: SonarQube Analysis
+    needs: test
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Analyse Code
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+  delivery:
+    name: CD - Package Calculator
+    needs: code-analysis
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Create Package
+        run: |
+          New-Item -ItemType Directory -Force -Path dist
+          Copy-Item calculator.py dist/
+        shell: powershell
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: calculator-package
+          path: dist/calculator.py
